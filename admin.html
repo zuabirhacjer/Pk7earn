@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚙️ Admin Panel - Pakistan Earn</title>
+<style>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial;background:#f0f2f5}
+.screen{display:none;min-height:100vh;padding-bottom:80px}
+.screen.active{display:block}
+.header{background:linear-gradient(135deg,#1a237e 0%,#283593 100%);color:white;padding:20px;text-align:center}
+.header h2{font-size:20px}
+.login-box{max-width:350px;margin:50px auto;background:white;padding:30px;border-radius:15px;box-shadow:0 4px 15px rgba(0,0,0,0.1)}
+.login-box input{width:100%;padding:14px;margin:10px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px}
+.btn{background:linear-gradient(135deg,#1a237e 0%,#283593 100%);color:white;border:none;padding:15px;border-radius:12px;font-size:16px;cursor:pointer;width:100%;margin:8px 0;font-weight:600}
+.btn-green{background:linear-gradient(135deg,#1b5e20 0%,#2e7d32 100%)}
+.btn-red{background:linear-gradient(135deg,#b71c1c 0%,#c62828 100%)}
+.btn-orange{background:linear-gradient(135deg,#e65100 0%,#f57c00 100%)}
+.btn-gray{background:#666}
+.btn-small{padding:8px 15px;font-size:13px;width:auto;margin:2px}
+.card{background:white;margin:12px;padding:20px;border-radius:15px;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:12px}
+.stat-card{background:white;padding:20px;border-radius:15px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.stat-card .num{font-size:28px;font-weight:bold;color:#1a237e}
+.stat-card small{color:#666;font-size:12px}
+.tab-nav{display:flex;background:white;margin:12px;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.tab-btn{flex:1;padding:15px;text-align:center;border:none;background:white;cursor:pointer;font-weight:600;color:#666}
+.tab-btn.active{background:#1a237e;color:white}
+.request-item{background:#f5f5f5;padding:15px;border-radius:10px;margin:10px 0;border-left:4px solid #e65100}
+.request-item.approved{border-left-color:#2e7d32;background:#e8f5e9}
+.request-item.rejected{border-left-color:#c62828;background:#ffebee}
+.user-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #eee}
+.user-row:last-child{border:none}
+.user-row.banned{background:#ffebee;border-radius:8px;padding:12px;margin:5px 0;border-left:4px solid #c62828}
+.badge{display:inline-block;padding:4px 12px;border-radius:15px;font-size:11px;font-weight:600}
+.badge-pending{background:#fff3e0;color:#e65100}
+.badge-active{background:#e8f5e9;color:#1b5e20}
+.badge-free{background:#ffebee;color:#c62828}
+.badge-banned{background:#ffebee;color:#c62828}
+.settings-input{width:100%;padding:14px;margin:8px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:white;display:flex;justify-content:space-around;padding:8px 0;box-shadow:0 -2px 10px rgba(0,0,0,0.1);z-index:1000}
+.nav-item{text-align:center;cursor:pointer;padding:5px 15px;color:#666}
+.nav-item.active{color:#1a237e}
+.nav-item span{display:block;font-size:20px}
+.nav-item small{font-size:11px}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1a237e;color:white;padding:12px 25px;border-radius:25px;display:none;z-index:9999;font-weight:500}
+.empty-state{text-align:center;padding:40px;color:#999}
+.filter-bar{display:flex;gap:8px;margin:0 12px 12px}
+.filter-bar button{flex:1;padding:10px;border:none;border-radius:8px;background:white;cursor:pointer;font-size:13px}
+.filter-bar button.active{background:#1a237e;color:white}
+</style>
+</head>
+<body>
+<!-- LOGIN SCREEN -->
+<div class="screen active" id="loginScreen">
+<div class="header">
+<h2>⚙️ Admin Panel</h2>
+<p>Pakistan Earn</p>
+</div>
+<div class="login-box">
+<h3 style="text-align:center;margin-bottom:20px;color:#1a237e">Admin Login</h3>
+<input type="password" placeholder="Admin Password" id="adminPass">
+<button class="btn" onclick="login()">🔐 LOGIN</button>
+<p style="text-align:center;margin-top:15px;font-size:13px;color:#666">
+Default: <code>admin123</code>
+</p>
+</div>
+</div>
+<!-- DASHBOARD -->
+<div class="screen" id="dashboardScreen">
+<div class="header">
+<h2>⚙️ Admin Dashboard</h2>
+<p>Overview</p>
+</div>
+
+<div class="stats-grid">
+<div class="stat-card">
+<div class="num" id="totalUsers">0</div>
+<small>Total Users</small>
+</div>
+<div class="stat-card">
+<div class="num" id="activeUsers">0</div>
+<small>Active Plans</small>
+</div>
+<div class="stat-card">
+<div class="num" id="pendingPlans">0</div>
+<small>Pending Plans</small>
+</div>
+<div class="stat-card">
+<div class="num" id="pendingWithdraws">0</div>
+<small>Pending Withdraws</small>
+</div>
+</div>
+
+<div class="card">
+<h3>💰 Financial Overview</h3>
+<div class="user-row" style="margin-top:15px">
+<span>Total Collected (Plans)</span>
+<span style="font-weight:bold;color:#1a237e" id="totalCollected">Rs 0</span>
+</div>
+<div class="user-row">
+<span>Total Paid (Withdraws)</span>
+<span style="font-weight:bold;color:#c62828" id="totalPaid">Rs 0</span>
+</div>
+<div class="user-row">
+<span>Net Profit</span>
+<span style="font-weight:bold;color:#2e7d32" id="netProfit">Rs 0</span>
+</div>
+</div>
+
+<div class="card">
+<h3>⚡ Quick Actions</h3>
+<button class="btn btn-green" onclick="showTab('plans')">📋 Plan Requests</button>
+<button class="btn btn-orange" onclick="showTab('withdraws')">💸 Withdraw Requests</button>
+<button class="btn" onclick="showTab('users')">👥 All Users</button>
+</div>
+</div>
+<!-- PLAN REQUESTS -->
+<div class="screen" id="plansScreen">
+<div class="header">
+<h2>📋 Plan Requests</h2>
+<p>Activation Requests</p>
+</div>
+
+<div class="filter-bar">
+<button class="active" onclick="filterPlans('all',this)">All</button>
+<button onclick="filterPlans('pending',this)">Pending</button>
+<button onclick="filterPlans('approved',this)">Approved</button>
+</div>
+
+<div class="card" id="planRequestsList">
+<!-- Dynamic -->
+</div>
+</div>
+<!-- WITHDRAW REQUESTS -->
+<div class="screen" id="withdrawsScreen">
+<div class="header">
+<h2>💸 Withdraw Requests</h2>
+<p>Payment Requests</p>
+</div>
+
+<div class="filter-bar">
+<button class="active" onclick="filterWithdraws('all',this)">All</button>
+<button onclick="filterWithdraws('pending',this)">Pending</button>
+<button onclick="filterWithdraws('approved',this)">Approved</button>
+</div>
+
+<div class="card" id="withdrawRequestsList">
+<!-- Dynamic -->
+</div>
+</div>
+<!-- USERS -->
+<div class="screen" id="usersScreen">
+<div class="header">
+<h2>👥 All Users</h2>
+<p>User Management</p>
+</div>
+
+<div class="card">
+<input type="text" placeholder="🔍 Search user..." id="searchUser" onkeyup="searchUsers()" 
+style="width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:10px;font-size:15px">
+</div>
+
+<div class="card" id="usersList">
+<!-- Dynamic -->
+</div>
+</div>
+<!-- SETTINGS -->
+<div class="screen" id="settingsScreen">
+<div class="header">
+<h2>⚙️ Settings</h2>
+<p>Platform Configuration</p>
+</div>
+
+<div class="card">
+<h3>💰 Plan Settings</h3>
+<label style="color:#666;font-size:13px">Plan Price (Rs)</label>
+<input type="number" class="settings-input" id="settingPlanPrice" value="650">
+
+<label style="color:#666;font-size:13px">Earning Per Invite (Rs)</label>
+<input type="number" class="settings-input" id="settingEarnPerInvite" value="300">
+
+<label style="color:#666;font-size:13px">Minimum Withdraw (Rs)</label>
+<input type="number" class="settings-input" id="settingMinWithdraw" value="500">
+
+<button class="btn btn-green" onclick="saveSettings()">💾 Save Settings</button>
+</div>
+
+<div class="card">
+<h3>📱 Payment Numbers</h3>
+<label style="color:#666;font-size:13px">Easypaisa Number</label>
+<input type="text" class="settings-input" id="settingEasypaisa" placeholder="03XX-XXXXXXX">
+
+<label style="color:#666;font-size:13px">JazzCash Number</label>
+<input type="text" class="settings-input" id="settingJazzcash" placeholder="03XX-XXXXXXX">
+
+<button class="btn btn-green" onclick="savePaymentNumbers()">💾 Save Numbers</button>
+</div>
+
+<div class="card">
+<h3>🔐 Security</h3>
+<label style="color:#666;font-size:13px">New Admin Password</label>
+<input type="password" class="settings-input" id="newAdminPass" placeholder="New password">
+
+<button class="btn btn-orange" onclick="changePassword()">🔒 Change Password</button>
+</div>
+
+<div class="card">
+<h3>🗑️ Danger Zone</h3>
+<button class="btn btn-red" onclick="clearAllData()">🗑️ Clear All Data</button>
+<p style="color:#999;font-size:12px;margin-top:10px">Warning: This will delete everything!</p>
+</div>
+</div>
+<!-- BOTTOM NAV -->
+<div class="bottom-nav" id="adminNav" style="display:none">
+<div class="nav-item active" onclick="showScreen('dashboardScreen',this)">
+<span>📊</span>
+<small>Dashboard</small>
+</div>
+<div class="nav-item" onclick="showScreen('plansScreen',this)">
+<span>📋</span>
+<small>Plans</small>
+</div>
+<div class="nav-item" onclick="showScreen('withdrawsScreen',this)">
+<span>💸</span>
+<small>Withdraws</small>
+</div>
+<div class="nav-item" onclick="showScreen('usersScreen',this)">
+<span>👥</span>
+<small>Users</small>
+</div>
+<div class="nav-item" onclick="showScreen('settingsScreen',this)">
+<span>⚙️</span>
+<small>Settings</small>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+// ========== DATA ==========
+let adminData = {
+    password: localStorage.getItem('pe_adminPass') || 'admin123'
+};
+
+// ========== LOGIN ==========
+function login() {
+    let pass = document.getElementById('adminPass').value;
+    if(pass === adminData.password) {
+        document.getElementById('loginScreen').classList.remove('active');
+        document.getElementById('dashboardScreen').classList.add('active');
+        document.getElementById('adminNav').style.display = 'flex';
+        loadDashboard();
+        showToast('✅ Welcome Admin!');
+    } else {
+        showToast('❌ Wrong Password!');
+    }
+}
+// ========== SCREEN SWITCHING ==========
+function showScreen(screenName, navElement) {
+    document.querySelectorAll('.screen').forEach(function(s) {
+        s.classList.remove('active');
+    });
+    document.getElementById(screenName).classList.add('active');
+    
+    document.querySelectorAll('.nav-item').forEach(function(n) {
+        n.classList.remove('active');
+    });
+    if(navElement) navElement.classList.add('active');
+    
+    if(screenName === 'plansScreen') loadPlanRequests();
+    if(screenName === 'withdrawsScreen') loadWithdrawRequests();
+    if(screenName === 'usersScreen') loadUsers();
+    if(screenName === 'settingsScreen') loadSettings();
+}
+
+function showTab(tab) {
+    if(tab === 'plans') showScreen('plansScreen', document.querySelectorAll('.nav-item')[1]);
+    if(tab === 'withdraws') showScreen('withdrawsScreen', document.querySelectorAll('.nav-item')[2]);
+    if(tab === 'users') showScreen('usersScreen', document.querySelectorAll('.nav-item')[3]);
+}
+// ========== DASHBOARD ==========
+function loadDashboard() {
+    let users = JSON.parse(localStorage.getItem('pe_allUsers')) || [];
+    let planRequests = JSON.parse(localStorage.getItem('pe_planRequests')) || [];
+    let withdrawRequests = JSON.parse(localStorage.getItem('pe_withdrawRequests')) || [];
+    
+    document.getElementById('totalUsers').textContent = users.length;
+    document.getElementById('activeUsers').textContent = users.filter(function(u) { return u.planActive; }).length;
+    document.getElementById('pendingPlans').textContent = planRequests.filter(function(r) { return r.status === 'pending'; }).length;
+    document.getElementById('pendingWithdraws').textContent = withdrawRequests.filter(function(r) { return r.status === 'pending'; }).length;
+    
+    let totalCollected = planRequests.filter(function(r) { return r.status === 'approved'; }).reduce(function(sum, r) { return sum + r.amount; }, 0);
+    let totalPaid = withdrawRequests.filter(function(r) { return r.status === 'approved'; }).reduce(function(sum, r) { return sum + r.amount; }, 0);
+    
+    document.getElementById('totalCollected').textContent = 'Rs ' + totalCollected;
+    document.getElementById('totalPaid').textContent = 'Rs ' + totalPaid;
+    document.getElementById('netProfit').textContent = 'Rs ' + (totalCollected - totalPaid);
+}
+
+// ========== PLAN REQUESTS ==========
+function loadPlanRequests(filter) {
+    let requests = JSON.parse(localStorage.getItem('pe_planRequests')) || [];
+    let container = document.getElementById('planRequestsList');
+    let filtered = requests;
+    
+    if(filter && filter !== 'all') {
+        filtered = requests.filter(function(r) { return r.status === filter; });
+    }
+    
+    if(filtered.length === 0) {
+        container.innerHTML = '<div class="empty-state">📭 Koi request nahi</div>';
+        return;
+    }
+    
+    container.innerHTML = filtered.map(function(req) {
+        let buttons = '';
+        if(req.status === 'pending') {
+            buttons = '<div style="margin-top:10px">' +
+                '<button class="btn btn-green btn-small" onclick="approvePlan(\'' + req.id + '\')">✅ Approve</button>' +
+                '<button class="btn btn-red btn-small" onclick="rejectPlan(\'' + req.id + '\')">❌ Reject</button>' +
+                '</div>';
+        }
+        
+        return '<div class="request-item ' + req.status + '">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+            '<strong>' + req.userName + '</strong>' +
+            '<span class="badge badge-' + req.status + '">' + req.status.toUpperCase() + '</span>' +
+            '</div>' +
+            '<p style="font-size:13px;color:#666">Mobile: ' + req.userMobile + '</p>' +
+            '<p style="font-size:13px;color:#666">TID: ' + req.tid + '</p>' +
+            '<p style="font-size:13px;color:#666">Amount: Rs ' + req.amount + '</p>' +
+            '<p style="font-size:12px;color:#999;margin-top:5px">' + req.date + '</p>' +
+            buttons +
+            '</div>';
+    }).join('');
+}
+
+function filterPlans(status, btn) {
+    document.querySelectorAll('.filter-bar button').forEach(function(b) {
+        b.classList.remove('active');
+    });
+    btn.classList.add('active');
+    loadPlanRequests(status);
+}
+function approvePlan(requestId) {
+    let requests = JSON.parse(localStorage.getItem('pe_planRequests')) || [];
+    let users = JSON.parse(localStorage.getItem('pe_allUsers')) || [];
+    
+    let req = requests.find(function(r) { return r.id === requestId; });
+    if(req) {
+        req.status = 'approved';
+        
+        let user = users.find(function(u) { return u.id === req.userId; });
+        if(user) {
+            user.planActive = true;
+            user.planPending = false;
+        }
+        
+        let currentUser = JSON.parse(localStorage.getItem('pe_currentUser'));
+        if(currentUser && currentUser.id === req.userId) {
+            currentUser.planActive = true;
+            currentUser.planPending = false;
+            localStorage.setItem('pe_currentUser', JSON.stringify(currentUser));
+        }
+        
+        localStorage.setItem('pe_planRequests', JSON.stringify(requests));
+        localStorage.setItem('pe_allUsers', JSON.stringify(users));
+        
+        showToast('✅ Plan Approved!');
+        loadPlanRequests('pending');
+        loadDashboard();
+    }
+}
+
+function rejectPlan(requestId) {
+    let requests = JSON.parse(localStorage.getItem('pe_planRequests')) || [];
+    let users = JSON.parse(localStorage.getItem('pe_allUsers')) || [];
+    
+    let req = requests.find(function(r) { return r.id === requestId; });
+    if(req) {
+        req.status = 'rejected';
+        
+        let user = users.find(function(u) { return u.id === req.userId; });
+        if(user) user.planPending = false;
+        
+        let currentUser = JSON.parse(localStorage.getItem('pe_currentUser'));
+        if(currentUser && currentUser.id === req.userId) {
+            currentUser.planPending = false;
+            localStorage.setItem('pe_currentUser', JSON.stringify(currentUser));
+        }
+        
+        localStorage.setItem('pe_planRequests', JSON.stringify(requests));
+        localStorage.setItem('pe_allUsers', JSON.stringify(users));
+        
+        showToast('❌ Plan Rejected!');
+        loadPlanRequests('pending');
+    }
+}
+// ========== WITHDRAW REQUESTS ==========
+function loadWithdrawRequests(filter) {
+    let requests = JSON.parse(localStorage.getItem('pe_withdrawRequests')) || [];
+    let container = document.getElementById('withdrawRequestsList');
+    let filtered = requests;
+    
+    if(filter && filter !== 'all') {
+        filtered = requests.filter(function(r) { return r.status === filter; });
+    }
+    
+    if(filtered.length === 0) {
+        container.innerHTML = '<div class="empty-state">📭 Koi request nahi</div>';
+        return;
+    }
+    
+    container.innerHTML = filtered.map(function(req) {
+        let buttons = '';
+        if(req.status === 'pending') {
+            buttons = '<div style="margin-top:10px">' +
+                '<button class="btn btn-green btn-small" onclick="approveWithdraw(\'' + req.id + '\')">✅ Pay</button>' +
+                '<button class="btn btn-red btn-small" onclick="rejectWithdraw(\'' + req.id + '\')">❌ Reject</button>' +
+                '</div>';
+        }
+        
+        return '<div class="request-item ' + req.status + '">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+            '<strong>' + req.userName + '</strong>' +
+            '<span class="badge badge-' + req.status + '">' + req.status.toUpperCase() + '</span>' +
+            '</div>' +
+            '<p style="font-size:13px;color:#666">Mobile: ' + req.userMobile + '</p>' +
+            '<p style="font-size:13px;color:#666">Withdraw Name: ' + (req.withdrawName || 'N/A') + '</p>' +
+            '<p style="font-size:13px;color:#666">Withdraw Mobile: ' + (req.withdrawMobile || 'N/A') + '</p>' +
+            '<p style="font-size:13px;color:#666">Account: ' + (req.withdrawAccount || 'N/A') + '</p>' +
+            '<p style="font-size:13px;color:#666">Amount: Rs ' + req.amount + '</p>' +
+            '<p style="font-size:13px;color:#666">Method: ' + req.method + '</p>' +
+            '<p style="font-size:12px;color:#999;margin-top:5px">' + req.date + '</p>' +
+            buttons +
+            '</div>';
+    }).join('');
+}
+
+function filterWithdraws(status, btn) {
+    document.querySelectorAll('.filter-bar button').forEach(function(b) {
+        b.classList.remove('active');
+    });
+    btn.classList.add('active');
+    loadWithdrawRequests(status);
+}
+function approveWithdraw(requestId) {
+    let requests = JSON.parse(localStorage.getItem('pe_withdrawRequests')) || [];
+    let users = JSON.parse(localStorage.getItem('pe_allUsers')) || [];
+    
+    let req = requests.find(function(r) { return r.id === requestId; });
+    if(req) {
+        req.status = 'approved';
+        
+        let user = users.find(function(u) { return u.id === req.userId; });
+        if(user) {
+            user.balance -= req.amount;
+            user.totalWithdrawn += req.amount;
+        }
+        
+        let currentUser = JSON.parse(localStorage.getItem('pe_currentUser'));
+        if(currentUser && currentUser.id === req.userId) {
+            currentUser.balance -= req.amount;
+            currentUser.totalWithdrawn += req.amount;
+            localStorage.setItem('pe_currentUser', JSON.stringify(currentUser));
+        }
+        
+        localStorage.setItem('pe_withdrawRequests', JSON.stringify(requests));
+        localStorage.setItem('pe_allUsers', JSON.stringify(users));
+        
+        showToast('✅ Payment Approved!');
+        loadWithdrawRequests('pending');
+        loadDashboard();
+    }
+}
+
+function rejectWithdraw(requestId) {
+    let requests = JSON.parse(localStorage.getItem('pe_withdrawRequests')) || [];
+    let req = requests.find(function(r) { return r.id === requestId; });
+    if(req) {
+        req.status = 'rejected';
+        localStorage.setItem('pe_withdrawRequests', JSON.stringify(requests));
+        showToast('❌ Withdraw Rejected!');
+        loadWithdrawRequests('pending');
+    }
+}
+// ========== USERS ==========
+function loadUsers() {
+    let users = JSON.parse(localStorage.getItem('pe_allUsers')) || [];
+    let container = document.getElementById('usersList');
+    
+    if(users.length === 0) {
+        container.innerHTML = '<div class="empty-state">👤 Koi user nahi</div>';
+        return;
+    }
+    
+    container.innerHTML = users.map(function(user) {
+        let statusClass = user.banned ? 'banned' : (user.planActive ? 'active' : (user.planPending ? 'pending' : 'free'));
+        let statusText = user.banned ? '🚫 BANNED' : (user.planActive ? 'ACTIVE' : (user.planPending ? 'PENDING' : 'FREE'));
+        
+        let banButton = '';
+        if(user.banned) {
+            banButton = '<button class="btn btn-green btn-small" onclick="unbanUser(\'' + user.id + '\')">✅ Unban</button>';
+        } else {
+            banButton = '<button class="btn btn-red btn-small" onclick="banUser(\'' + user.id + '\')">🚫 Ban</button>';
+        }
+        
+        return '<div class="user-row ' + (user.banned ? 'banned' : '') + '">' +
+            '<div>' +
+            '<strong>' + user.name + '</strong>' +
+            '<p style="font-size:12px;color:#666">' + user.mobile + ' | ID: ' + user.id + '</p>' +
+            '</div>' +
+            '<div style="text-align:right">' +
+            '<span class="badge badge-' + statusClass + '">' + statusText + '</span>' +
+            '<p style="font-size:12px;color:#666;margin-top:4px">Rs ' + user.balance + '</p>' +
+            '<div style="margin-top:5px">' + banButton + '</div>' +
+            '</div>' +
+            '</div>';
+    }).join('');
+}
+
+function searchUsers() {
+    let term = document.getElementById('searchUser').value.toLowerCase();
+    let users = JSON.parse(localStorage.getItem('pe_allUsers')) || [];
+    let container = document.getElementById('usersList');
+    
+    let filtered = users.filter(function(u) {
+        return u.name.toLowerCase().includes(term) || 
+               u.mobile.includes(term) ||
+               u.id.toLowerCase().includes(term);
+    });
+    
+    if(filtered.length === 0) {
+        container.innerHTML = '<div class="empty-state">🔍 Koi result nahi</div>';
+        return;
+    }
+    
+    container.innerHTML = filtered.map(function(user) {
+        let statusClass = user.banned ? 'banned' : (user.planActive ? 'active' : (user.planPending ? 'pending' : 'free'));
+        let statusText = user.banned ? '🚫 BANNED' : (user.planActive ? 'ACTIVE' : (user.planPending ? 'PENDING' : 'FREE'));
+        
+        let banButton = '';
+        if(user.banned) {
+            banButton = '<button class="btn btn-green btn-small" onclick="unbanUser(\'' + user.id + '\')">✅ Unban</button>';
+        } else {
+            banButton = '<button class="btn btn-red btn-small" onclick="banUser(\'' + user.id + '\')">🚫 Ban</button>';
+        }
+        
+        return '<div class="user-row ' + (user.banned ? 'banned' : '') + '">' +
+            '<div>' +
+            '<strong>' + user.name + '</strong>' +
+            '<p style="font-size:12px;color:#666">' + user.mobile + ' | ID: ' + user.id + '</p>' +
+            '</div>' +
+            '<div style="text-align:right">' +
+            '<span class="badge badge-' + statusClass + '">' + statusText + '</span>' +
+            '<p style="font-size:12px;color:#666;margin-top:4px">Rs ' + user.balance + '</p>' +
+            '<div style="margin-top:5px">' + banButton + '</div>' +
+            '</div>' +
+            '</div>';
+    }).join('');
+}
+
+// ========== BAN/UNBAN ==========
+function banUser(userId) {
+    if(!confirm('🚫 SACH MEIN? Is user ko ban karna hai?')) return;
+    
+    let users = JSON.parse(localStorage.getItem('pe_allUsers')) || [];
+    let user = users.find(function(u) { return u.id === userId; });
+    
+    if(user) {
+        user.banned = true;
+        localStorage.setItem('pe_allUsers', JSON.stringify(users));
+        
+        let currentUser = JSON.parse(localStorage.getItem('pe_currentUser'));
+        if(currentUser && currentUser.id === userId) {
+            currentUser.banned = true;
+            localStorage.setItem('pe_currentUser', JSON.stringify(currentUser));
+        }
+        
+        showToast('🚫 User Banned!');
+        loadUsers();
+    }
+}
+
+function unbanUser(userId) {
+    let users = JSON.parse(localStorage.getItem('pe_allUsers')) || [];
+    let user = users.find(function(u) { return u.id === userId; });
+    
+    if(user) {
+        user.banned = false;
+        localStorage.setItem('pe_allUsers', JSON.stringify(users));
+        
+        let currentUser = JSON.parse(localStorage.getItem('pe_currentUser'));
+        if(currentUser && currentUser.id === userId) {
+            currentUser.banned = false;
+            localStorage.setItem('pe_currentUser', JSON.stringify(currentUser));
+        }
+        
+        showToast('✅ User Unbanned!');
+        loadUsers();
+    }
+}
+
+// ========== SETTINGS ==========
+function loadSettings() {
+    let planPrice = parseInt(localStorage.getItem('pe_planPrice')) || 650;
+    let earnPerInvite = parseInt(localStorage.getItem('pe_earnPerInvite')) || 300;
+    let minWithdraw = parseInt(localStorage.getItem('pe_minWithdraw')) || 500;
+    let paymentNumbers = JSON.parse(localStorage.getItem('pe_paymentNumbers')) || {
+        easypaisa: '03XX-XXXXXXX',
+        jazzcash: '03XX-XXXXXXX'
+    };
+    
+    document.getElementById('settingPlanPrice').value = planPrice;
+    document.getElementById('settingEarnPerInvite').value = earnPerInvite;
+    document.getElementById('settingMinWithdraw').value = minWithdraw;
+    document.getElementById('settingEasypaisa').value = paymentNumbers.easypaisa;
+    document.getElementById('settingJazzcash').value = paymentNumbers.jazzcash;
+}
+
+function saveSettings() {
+    let planPrice = parseInt(document.getElementById('settingPlanPrice').value);
+    let earnPerInvite = parseInt(document.getElementById('settingEarnPerInvite').value);
+    let minWithdraw = parseInt(document.getElementById('settingMinWithdraw').value);
+    
+    localStorage.setItem('pe_planPrice', planPrice);
+    localStorage.setItem('pe_earnPerInvite', earnPerInvite);
+    localStorage.setItem('pe_minWithdraw', minWithdraw);
+    
+    showToast('✅ Settings Saved!');
+}
+
+function savePaymentNumbers() {
+    let paymentNumbers = {
+        easypaisa: document.getElementById('settingEasypaisa').value,
+        jazzcash: document.getElementById('settingJazzcash').value
+    };
+    
+    localStorage.setItem('pe_paymentNumbers', JSON.stringify(paymentNumbers));
+    showToast('✅ Payment Numbers Saved!');
+}
+
+function changePassword() {
+    let newPass = document.getElementById('newAdminPass').value;
+    if(!newPass || newPass.length < 4) {
+        showToast('❌ Minimum 4 characters!');
+        return;
+    }
+    adminData.password = newPass;
+    localStorage.setItem('pe_adminPass', newPass);
+    showToast('✅ Password Changed!');
+    document.getElementById('newAdminPass').value = '';
+}
+
+function clearAllData() {
+    if(confirm('🚨 SACH MEIN? Sab data delete ho jayega!')) {
+        if(confirm('💯 PAKKA? Yeh wapas nahi aa sakta!')) {
+            localStorage.clear();
+            showToast('🗑️ All Data Cleared!');
+            setTimeout(function() {
+                location.reload();
+            }, 2000);
+        }
+    }
+}
+
+// ========== TOAST ==========
+function showToast(message) {
+    let toast = document.getElementById('toast');
+    toast.innerText = message;
+    toast.style.display = 'block';
+    setTimeout(function() {
+        toast.style.display = 'none';
+    }, 3000);
+}
+</script>
+</body>
+</html>

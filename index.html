@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pakistan Earn</title>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial;background:#f0f2f5}
+.screen{display:none;padding-bottom:80px;min-height:100vh}
+.screen.active{display:block}
+.header{background:#01411c;color:white;padding:20px;text-align:center}
+.header h2{font-size:20px}
+.card{background:white;margin:10px;padding:15px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,0.1)}
+.btn{background:#01411c;color:white;border:none;padding:12px;border-radius:8px;width:100%;margin:5px 0;font-size:14px;cursor:pointer}
+.btn-green{background:#2e7d32}
+.btn-red{background:#c62828}
+.btn-gray{background:#666}
+.amount{font-size:32px;font-weight:bold;color:#01411c;text-align:center}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:white;display:flex;justify-content:space-around;padding:8px 0;box-shadow:0 -2px 10px rgba(0,0,0,0.1)}
+.nav-item{text-align:center;cursor:pointer;padding:5px 10px;color:#666;font-size:11px}
+.nav-item.active{color:#01411c}
+.nav-item span{display:block;font-size:20px}
+input{width:100%;padding:12px;margin:5px 0;border:1px solid #ddd;border-radius:8px;font-size:14px}
+.referral-box{background:#e8f5e9;padding:15px;border-radius:8px;text-align:center;margin:10px 0;border:2px dashed #01411c}
+.referral-link{background:white;padding:10px;border-radius:5px;word-break:break-all;font-size:12px;color:#01411c}
+.status-free{background:#ffebee;color:#c62828;padding:5px 15px;border-radius:15px;font-size:12px}
+.status-active{background:#e8f5e9;color:#2e7d32;padding:5px 15px;border-radius:15px;font-size:12px}
+.status-pending{background:#fff3e0;color:#e65100;padding:5px 15px;border-radius:15px;font-size:12px}
+.status-banned{background:#ffebee;color:#c62828;padding:5px 15px;border-radius:15px;font-size:12px}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#01411c;color:white;padding:10px 20px;border-radius:20px;display:none;z-index:9999}
+.payment-option{display:flex;align-items:center;padding:10px;background:#f5f5f5;border-radius:8px;margin:5px 0;cursor:pointer}
+.payment-option.selected{border:2px solid #01411c;background:#e8f5e9}
+.request-card{background:#fff3e0;border-left:4px solid #e65100;padding:10px;margin:5px 0;border-radius:5px}
+.admin-link{display:none;position:fixed;top:10px;right:10px;background:rgba(255,255,255,0.3);color:white;padding:5px 10px;border-radius:5px;font-size:10px;text-decoration:none;z-index:100}
+.login-box{max-width:350px;margin:30px auto;background:white;padding:25px;border-radius:15px;box-shadow:0 4px 15px rgba(0,0,0,0.1)}
+.login-box h2{text-align:center;color:#01411c;margin-bottom:20px}
+.link-btn{background:none;border:none;color:#01411c;text-decoration:underline;cursor:pointer;font-size:14px}
+</style>
+</head>
+<body>
+<!-- LOGIN SCREEN -->
+<div class="screen active" id="loginScreen">
+<div class="header">
+<div style="font-size:24px">🇵🇰</div>
+<h2>Pakistan Earn</h2>
+<p>Login karo, Paisa Kamao!</p>
+</div>
+<div class="login-box">
+<h2>🔐 Login</h2>
+<input type="text" placeholder="Mobile Number (03XX-XXXXXXX)" id="loginMobile">
+<input type="password" placeholder="Password" id="loginPassword">
+<button class="btn" onclick="login()">LOGIN</button>
+<p>Naya user? <button class="link-btn" onclick="showScreen('signupScreen')">Signup karo</button></p>
+</div>
+</div>
+<!-- SIGNUP SCREEN -->
+<div class="screen" id="signupScreen">
+<div class="header">
+<div style="font-size:24px">🇵🇰</div>
+<h2>Pakistan Earn</h2>
+<p>Naya account banayein!</p>
+</div>
+<div class="login-box">
+<h2>📝 Signup</h2>
+<input type="text" placeholder="Full Name" id="signupName">
+<input type="text" placeholder="Mobile Number (03XX-XXXXXXX)" id="signupMobile">
+<input type="email" placeholder="Email (optional)" id="signupEmail">
+<input type="password" placeholder="Password" id="signupPassword">
+<input type="password" placeholder="Confirm Password" id="signupConfirm">
+<button class="btn btn-green" onclick="signup()">SIGNUP</button>
+<p>Pehle se account? <button class="link-btn" onclick="showScreen('loginScreen')">Login karo</button></p>
+</div>
+</div>
+<!-- DASHBOARD -->
+<div class="screen" id="dashboard">
+<div class="header" id="mainHeader">
+<div style="font-size:24px">🇵🇰</div>
+<h2>Pakistan Earn</h2>
+<p>Welcome, <span id="dashName">User</span>!</p>
+</div>
+<a href="admin.html" class="admin-link" id="adminLink">⚙️</a>
+
+<div class="card" style="background:#01411c;color:white">
+<p style="text-align:center;font-size:14px">Total Balance</p>
+<div class="amount" style="color:white" id="userBalance">Rs 0.00</div>
+<p style="text-align:center;font-size:12px">Easypaisa / JazzCash</p>
+</div>
+
+<div class="card">
+<h3>📊 Stats</h3>
+<div style="display:flex;justify-content:space-around;margin-top:10px">
+<div style="text-align:center"><div style="font-size:24px;font-weight:bold;color:#01411c" id="totalInvites">0</div><small>Invites</small></div>
+<div style="text-align:center"><div style="font-size:24px;font-weight:bold;color:#01411c" id="pendingInvites">0</div><small>Pending</small></div>
+<div style="text-align:center"><div style="font-size:24px;font-weight:bold;color:#01411c" id="completedInvites">0</div><small>Done</small></div>
+</div>
+</div>
+
+<div class="card" id="planRequestSection" style="display:none">
+<h3>⏳ Plan Request</h3>
+<div class="request-card">
+<p><strong>Status:</strong> <span style="color:#e65100">Pending</span></p>
+<p style="font-size:12px;color:#666">Admin approval ka intezaar...</p>
+</div>
+</div>
+
+<div class="card" id="bannedCard" style="display:none">
+<h3 style="color:#c62828">🚫 Account Banned!</h3>
+<p style="color:#666">Aapka account admin ne block kar diya hai.</p>
+</div>
+
+<div class="card" id="activatePlanCard">
+<h3>🚀 Plan Activate</h3>
+<p style="color:#666">Har invite pe <strong>Rs <span id="planPrice">650</span></strong></p>
+<div style="font-size:36px;font-weight:bold;color:#01411c;text-align:center">Rs <span id="planPriceDisplay">650</span></div>
+<p style="color:#666;font-size:12px">One-time fee</p>
+
+<div class="payment-option selected">
+<div style="width:40px;height:40px;background:#43a047;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;margin-right:10px">📗</div>
+<div><div style="font-weight:bold">Easypaisa</div><small style="color:#666" id="epNumber">03XX-XXXXXXX</small></div>
+</div>
+
+<div class="payment-option">
+<div style="width:40px;height:40px;background:#e65100;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;margin-right:10px">📙</div>
+<div><div style="font-weight:bold">JazzCash</div><small style="color:#666" id="jcNumber">03XX-XXXXXXX</small></div>
+</div>
+
+<input type="text" placeholder="Transaction ID (TID)" id="transactionId">
+<button class="btn" onclick="submitPlanRequest()">✅ REQUEST BHEJO</button>
+</div>
+
+<div class="card" id="activatedPlanCard" style="display:none">
+<h3 style="color:#2e7d32">✅ Plan Active!</h3>
+<p>Aap ab <strong>Rs <span class="earnPerInvite">300</span></strong> per invite</p>
+<div style="background:#e8f5e9;padding:10px;border-radius:8px;margin-top:10px">
+<p style="font-weight:bold">Referral Link:</p>
+<p style="word-break:break-all;font-size:12px;color:#01411c" id="userRefLink">Loading...</p>
+</div>
+</div>
+</div>
+<!-- INVITE -->
+<div class="screen" id="invite">
+<div class="header">
+<h2>📤 Invite & Earn</h2>
+<p>Har dost pe Rs <span class="earnPerInvite">300</span></p>
+</div>
+
+<div class="card" id="inviteActive" style="display:none">
+<div class="referral-box">
+<p style="font-weight:bold;color:#01411c">🔗 Aapka Link</p>
+<div class="referral-link" id="refLink">Loading...</div>
+<button class="btn btn-green" onclick="copyLink()" style="margin-top:10px">📋 Copy</button>
+</div>
+<h3 style="text-align:center;margin:10px 0">Share:</h3>
+<div style="text-align:center">
+<button class="btn" style="width:30%;display:inline-block;background:#25d366" onclick="shareWhatsApp()">WhatsApp</button>
+<button class="btn" style="width:30%;display:inline-block;background:#0088cc" onclick="shareTelegram()">Telegram</button>
+<button class="btn" style="width:30%;display:inline-block;background:#ff9800" onclick="shareSMS()">SMS</button>
+</div>
+</div>
+
+<div class="card" id="inviteInactive">
+<h3 style="text-align:center;color:#c62828">❌ Plan Active Nahi!</h3>
+<p style="text-align:center">Pehle plan activate karo</p>
+<button class="btn" onclick="showScreen('dashboard')">PLAN ACTIVATE</button>
+</div>
+</div>
+<!-- BANK -->
+<div class="screen" id="bank">
+<div class="header">
+<h2>🏦 Withdraw</h2>
+<p>Easypaisa / JazzCash</p>
+</div>
+
+<div class="card" style="background:#01411c;color:white">
+<p style="text-align:center">Balance</p>
+<div class="amount" style="color:white" id="withdrawBalance">Rs 0.00</div>
+<p style="text-align:center;font-size:12px">Min: Rs <span id="minWithdrawDisplay">500</span></p>
+</div>
+
+<div class="card" id="withdrawForm">
+<h3>💳 Withdraw Details</h3>
+
+<div class="payment-option selected" onclick="selectPayment(this)" data-method="Easypaisa">
+<div style="width:40px;height:40px;background:#43a047;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;margin-right:10px">📗</div>
+<div><div style="font-weight:bold">Easypaisa</div></div>
+</div>
+
+<div class="payment-option" onclick="selectPayment(this)" data-method="JazzCash">
+<div style="width:40px;height:40px;background:#e65100;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;margin-right:10px">📙</div>
+<div><div style="font-weight:bold">JazzCash</div></div>
+</div>
+
+<h4 style="margin-top:15px;color:#01411c">👤 Account Details</h4>
+<input type="text" placeholder="Full Name" id="withdrawName">
+<input type="text" placeholder="Mobile Number (03XX-XXXXXXX)" id="withdrawMobile">
+<input type="text" placeholder="Easypaisa / JazzCash Account Number" id="withdrawAccount">
+<input type="number" placeholder="Amount (Rs)" id="withdrawAmount">
+<button class="btn btn-green" onclick="submitWithdraw()">💸 WITHDRAW REQUEST</button>
+</div>
+
+<div class="card" id="pendingWithdraw" style="display:none">
+<h3>⏳ Pending Withdrawal</h3>
+<div class="request-card">
+<p><strong>Amount:</strong> Rs <span id="pendingWithdrawAmount">0</span></p>
+<p><strong>Status:</strong> <span style="color:#e65100">Admin Review Mein</span></p>
+</div>
+</div>
+
+<div class="card">
+<h3>📜 Withdrawal History</h3>
+<div id="withdrawHistory">
+<p style="text-align:center;color:#999;padding:20px">Koi withdrawal nahi</p>
+</div>
+</div>
+</div>
+<!-- PROFILE -->
+<div class="screen" id="profile">
+<div class="header">
+<h2>👤 Profile</h2>
+</div>
+
+<div class="card" style="text-align:center">
+<div style="width:80px;height:80px;border-radius:50%;background:#01411c;margin:0 auto;display:flex;align-items:center;justify-content:center;color:white;font-size:30px">👤</div>
+<h3 style="margin-top:10px" id="profileName">User</h3>
+<p style="color:#666;font-size:12px" id="profileMobile">03XX-XXXXXXX</p>
+<div style="margin-top:10px">
+<span class="status-free" id="planStatusBadge">❌ FREE</span>
+</div>
+</div>
+
+<div class="card">
+<h3>📱 Info</h3>
+<div style="margin-top:10px">
+<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee">
+<span style="color:#666">Mobile:</span><span id="profileMobile2">03XX-XXXXXXX</span>
+</div>
+<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee">
+<span style="color:#666">Join:</span><span id="joinDate">18/07/2026</span>
+</div>
+<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee">
+<span style="color:#666">Plan:</span><span style="color:#c62828" id="profilePlanStatus">Not Active</span>
+</div>
+<div style="display:flex;justify-content:space-between;padding:8px 0">
+<span style="color:#666">Earned:</span><span style="font-weight:bold" id="totalEarned">Rs 0</span>
+</div>
+</div>
+</div>
+
+<div class="card">
+<button class="btn btn-red" onclick="logout()">🚪 Logout</button>
+</div>
+</div>
+<!-- BOTTOM NAV -->
+<div class="bottom-nav" id="bottomNav" style="display:none">
+<div class="nav-item active" onclick="showScreen('dashboard')">
+<span>🏠</span>
+<div>Dashboard</div>
+</div>
+<div class="nav-item" onclick="showScreen('invite')">
+<span>📤</span>
+<div>Invite</div>
+</div>
+<div class="nav-item" onclick="showScreen('bank')">
+<span>🏦</span>
+<div>Bank</div>
+</div>
+<div class="nav-item" onclick="showScreen('profile')">
+<span>👤</span>
+<div>Profile</div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== FIREBASE CONFIG ==========
+const firebaseConfig = {
+  apiKey: "AIzaSyBgr9UDI0CMRaXtwZHTUNzk7mJ_exolBKI",
+  authDomain: "pakistan-earn-web.firebaseapp.com",
+  projectId: "pakistan-earn-web",
+  storageBucket: "pakistan-earn-web.firebasestorage.app",
+  messagingSenderId: "968458924940",
+  appId: "1:968458924940:web:6481e2a0c27b014a61dca9"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+// ========== GLOBAL DATA ==========
+let currentUser = null;
+let appSettings = {};
+
+// ========== LOAD SETTINGS ==========
+async function loadSettings() {
+    let doc = await db.collection("settings").doc("main").get();
+    if(doc.exists) {
+        appSettings = doc.data();
+        document.querySelectorAll("#planPrice, #planPriceDisplay").forEach(function(e) {
+            e.textContent = appSettings.plan_price || 650;
+        });
+        document.querySelectorAll(".earnPerInvite").forEach(function(e) {
+            e.textContent = appSettings.earn_per_invite || 300;
+        });
+        let minDisplay = document.getElementById("minWithdrawDisplay");
+        if(minDisplay) minDisplay.textContent = appSettings.min_withdraw || 500;
+        let epNum = document.getElementById("epNumber");
+        let jcNum = document.getElementById("jcNumber");
+        if(epNum) epNum.textContent = appSettings.easypaisa_number || "03XX-XXXXXXX";
+        if(jcNum) jcNum.textContent = appSettings.jazzcash_number || "03XX-XXXXXXX";
+    } else {
+        // Create default settings
+        appSettings = {
+            plan_price: 650,
+            earn_per_invite: 300,
+            min_withdraw: 500,
+            easypaisa_number: "03XX-XXXXXXX",
+            jazzcash_number: "03XX-XXXXXXX"
+        };
+        await db.collection("settings").doc("main").set(appSettings);
+    }
+}
+
+function init() {
+    loadSettings();
+    checkLogin();
+    let pt;
+    let h = document.getElementById("mainHeader");
+    if(h) {
+        h.addEventListener("touchstart", function() {
+            pt = setTimeout(function() {
+                let al = document.getElementById("adminLink");
+                if(al) al.style.display = "block";
+                showToast("⚙️ Admin link!");
+            }, 3000);
+        });
+        h.addEventListener("touchend", function() {
+            clearTimeout(pt);
+        });
+    }
+}
+
+// ========== CHECK LOGIN ==========
+async function checkLogin() {
+    let savedUser = localStorage.getItem("pe_currentUser");
+    if(savedUser) {
+        let userData = JSON.parse(savedUser);
+        let doc = await db.collection("users").doc(userData.id).get();
+        if(doc.exists) {
+            currentUser = doc.data();
+            if(!currentUser.banned) {
+                showMainApp();
+            } else {
+                showToast("🚫 Account banned hai!");
+                showScreen("loginScreen");
+            }
+        } else {
+            showScreen("loginScreen");
+        }
+    } else {
+        showScreen("loginScreen");
+    }
+}
+
+function showScreen(id) {
+    document.querySelectorAll(".screen").forEach(function(s) {
+        s.classList.remove("active");
+    });
+    let el = document.getElementById(id);
+    if(el) el.classList.add("active");
+}
+
+function showMainApp() {
+    showScreen("dashboard");
+    let bn = document.getElementById("bottomNav");
+    if(bn) bn.style.display = "flex";
+    updateUI();
+}
+
+// ========== LOGIN ==========
+async function login() {
+    let mobile = document.getElementById("loginMobile").value.trim();
+    let pass = document.getElementById("loginPassword").value;
+
+    if(!mobile || !pass) {
+        showToast("❌ Sab fields bharein!");
+        return;
+    }
+
+    let snapshot = await db.collection("users").where("mobile", "==", mobile).where("password", "==", pass).get();
+
+    if(snapshot.empty) {
+        showToast("❌ Galat mobile ya password!");
+        return;
+    }
+
+    let userDoc = snapshot.docs[0];
+    currentUser = userDoc.data();
+
+    if(currentUser.banned) {
+        showToast("🚫 Account banned hai!");
+        return;
+    }
+
+    localStorage.setItem("pe_currentUser", JSON.stringify(currentUser));
+    showMainApp();
+    showToast("✅ Welcome " + currentUser.name + "!");
+}
+
+// ========== SIGNUP ==========
+async function signup() {
+    let name = document.getElementById("signupName").value.trim();
+    let mobile = document.getElementById("signupMobile").value.trim();
+    let email = document.getElementById("signupEmail").value.trim();
+    let pass = document.getElementById("signupPassword").value;
+    let confirm = document.getElementById("signupConfirm").value;
+
+    if(!name || !mobile || !pass) {
+        showToast("❌ Name, Mobile, Password zaroori!");
+        return;
+    }
+    if(pass !== confirm) {
+        showToast("❌ Password match nahi!");
+        return;
+    }
+
+    let existing = await db.collection("users").where("mobile", "==", mobile).get();
+    if(!existing.empty) {
+        showToast("❌ Ye mobile pehle se hai!");
+        return;
+    }
+
+    let userId = "USER" + Math.random().toString(36).substr(2, 6).toUpperCase();
+
+    let newUser = {
+        id: userId,
+        name: name,
+        mobile: mobile,
+        email: email || "",
+        password: pass,
+        balance: 0,
+        plan_active: false,
+        plan_pending: false,
+        total_earned: 0,
+        total_withdrawn: 0,
+        banned: false,
+        join_date: new Date().toLocaleDateString(),
+        ref_by: "",
+        invites: 0
+    };
+
+    let urlParams = new URLSearchParams(window.location.search);
+    let ref = urlParams.get("ref");
+    if(ref) {
+        newUser.ref_by = ref;
+        let refDoc = await db.collection("users").doc(ref).get();
+        if(refDoc.exists) {
+            let referrer = refDoc.data();
+            let earnPerInvite = appSettings.earn_per_invite || 300;
+            if(referrer.plan_active && !referrer.banned) {
+                await db.collection("users").doc(ref).update({
+                    balance: (referrer.balance || 0) + earnPerInvite,
+                    total_earned: (referrer.total_earned || 0) + earnPerInvite,
+                    invites: (referrer.invites || 0) + 1
+                });
+            }
+        }
+    }
+
+    await db.collection("users").doc(userId).set(newUser);
+
+    currentUser = newUser;
+    localStorage.setItem("pe_currentUser", JSON.stringify(newUser));
+    showMainApp();
+    showToast("✅ Account bana diya!");
+}
+
+// ========== UPDATE UI ==========
+async function updateUI() {
+    if(!currentUser) return;
+
+    let doc = await db.collection("users").doc(currentUser.id).get();
+    if(doc.exists) currentUser = doc.data();
+
+    let dashName = document.getElementById("dashName");
+    if(dashName) dashName.textContent = currentUser.name;
+
+    let userBalance = document.getElementById("userBalance");
+    if(userBalance) userBalance.textContent = "Rs " + ((currentUser.balance || 0)).toFixed(2);
+
+    let withdrawBalance = document.getElementById("withdrawBalance");
+    if(withdrawBalance) withdrawBalance.textContent = "Rs " + ((currentUser.balance || 0)).toFixed(2);
+
+    let totalInvites = document.getElementById("totalInvites");
+    if(totalInvites) totalInvites.textContent = currentUser.invites || 0;
+
+    let profileName = document.getElementById("profileName");
+    if(profileName) profileName.textContent = currentUser.name;
+
+    let profileMobile = document.getElementById("profileMobile");
+    if(profileMobile) profileMobile.textContent = currentUser.mobile;
+
+    let profileMobile2 = document.getElementById("profileMobile2");
+    if(profileMobile2) profileMobile2.textContent = currentUser.mobile;
+
+    let joinDate = document.getElementById("joinDate");
+    if(joinDate) joinDate.textContent = currentUser.join_date;
+
+    let totalEarned = document.getElementById("totalEarned");
+    if(totalEarned) totalEarned.textContent = "Rs " + (currentUser.total_earned || 0);
+
+    if(currentUser.banned) {
+        document.getElementById("bannedCard").style.display = "block";
+        document.getElementById("activatePlanCard").style.display = "none";
+        let planStatusBadge = document.getElementById("planStatusBadge");
+        if(planStatusBadge) {
+            planStatusBadge.textContent = "🚫 BANNED";
+            planStatusBadge.className = "status-banned";
+        }
+        return;
+    }
+
+    if(currentUser.plan_active) {
+        document.getElementById("activatePlanCard").style.display = "none";
+        document.getElementById("activatedPlanCard").style.display = "block";
+        document.getElementById("planRequestSection").style.display = "none";
+        document.getElementById("inviteActive").style.display = "block";
+        document.getElementById("inviteInactive").style.display = "none";
+
+        let planStatusBadge = document.getElementById("planStatusBadge");
+        if(planStatusBadge) {
+            planStatusBadge.textContent = "✅ ACTIVE";
+            planStatusBadge.className = "status-active";
+        }
+
+        let profilePlanStatus = document.getElementById("profilePlanStatus");
+        if(profilePlanStatus) {
+            profilePlanStatus.textContent = "Active";
+            profilePlanStatus.style.color = "#2e7d32";
+        }
+
+        let currentDomain = window.location.origin + window.location.pathname.replace("index.html", "");
+        let refLink = currentDomain + "?ref=" + currentUser.id;
+
+        let userRefLink = document.getElementById("userRefLink");
+        if(userRefLink) userRefLink.textContent = refLink;
+
+        let refLinkEl = document.getElementById("refLink");
+        if(refLinkEl) refLinkEl.textContent = refLink;
+
+    } else if(currentUser.plan_pending) {
+        document.getElementById("activatePlanCard").style.display = "none";
+        document.getElementById("planRequestSection").style.display = "block";
+
+        let planStatusBadge = document.getElementById("planStatusBadge");
+        if(planStatusBadge) {
+            planStatusBadge.textContent = "⏳ PENDING";
+            planStatusBadge.className = "status-pending";
+        }
+    }
+
+    let withdrawSnapshot = await db.collection("withdraw_requests")
+        .where("user_id", "==", currentUser.id)
+        .where("status", "==", "pending")
+        .get();
+
+    if(!withdrawSnapshot.empty) {
+        let req = withdrawSnapshot.docs[0].data();
+        document.getElementById("withdrawForm").style.display = "none";
+        document.getElementById("pendingWithdraw").style.display = "block";
+        document.getElementById("pendingWithdrawAmount").textContent = req.amount;
+    }
+
+    // Load withdraw history
+    let historySnapshot = await db.collection("withdraw_requests")
+        .where("user_id", "==", currentUser.id)
+        .orderBy("date", "desc")
+        .get();
+
+    let historyContainer = document.getElementById("withdrawHistory");
+    if(!historySnapshot.empty && historyContainer) {
+        let html = "";
+        historySnapshot.forEach(function(doc) {
+            let w = doc.data();
+            html += "<div style=\'padding:10px;border-bottom:1px solid #eee\'><strong>Rs " + w.amount + "</strong> - <span style=\'color:" + (w.status === "approved" ? "#2e7d32" : (w.status === "rejected" ? "#c62828" : "#e65100")) + "\'>" + w.status.toUpperCase() + "</span><br><small style=\'color:#999\'>" + w.date + "</small></div>";
+        });
+        historyContainer.innerHTML = html;
+    }
+}
+
+// ========== PLAN REQUEST ==========
+async function submitPlanRequest() {
+    if(currentUser && currentUser.banned) {
+        showToast("🚫 Banned account se request nahi!");
+        return;
+    }
+
+    let tid = document.getElementById("transactionId").value.trim();
+    if(!tid) {
+        showToast("❌ TID dalen!");
+        return;
+    }
+
+    let planPrice = appSettings.plan_price || 650;
+
+    let req = {
+        id: "REQ" + Date.now(),
+        user_id: currentUser.id,
+        user_name: currentUser.name,
+        user_mobile: currentUser.mobile,
+        tid: tid,
+        amount: planPrice,
+        status: "pending",
+        date: new Date().toLocaleString()
+    };
+
+    await db.collection("plan_requests").doc(req.id).set(req);
+    await db.collection("users").doc(currentUser.id).update({ plan_pending: true });
+
+    currentUser.plan_pending = true;
+    localStorage.setItem("pe_currentUser", JSON.stringify(currentUser));
+
+    updateUI();
+    showToast("✅ Request bhej di!");
+}
+
+// ========== WITHDRAW ==========
+async function submitWithdraw() {
+    if(currentUser && currentUser.banned) {
+        showToast("🚫 Banned account se withdraw nahi!");
+        return;
+    }
+
+    let name = document.getElementById("withdrawName").value.trim();
+    let mobile = document.getElementById("withdrawMobile").value.trim();
+    let account = document.getElementById("withdrawAccount").value.trim();
+    let amt = parseFloat(document.getElementById("withdrawAmount").value);
+
+    let minWithdraw = appSettings.min_withdraw || 500;
+
+    let selectedMethod = "Easypaisa";
+    document.querySelectorAll(".payment-option").forEach(function(p) {
+        if(p.classList.contains("selected")) {
+            selectedMethod = p.getAttribute("data-method") || "Easypaisa";
+        }
+    });
+
+    if(!name) {
+        showToast("❌ Name dalen!");
+        return;
+    }
+    if(!mobile || mobile.length < 11) {
+        showToast("❌ Sahi mobile number dalen!");
+        return;
+    }
+    if(!account) {
+        showToast("❌ Account number dalen!");
+        return;
+    }
+    if(!amt || amt < minWithdraw) {
+        showToast("❌ Min Rs " + minWithdraw);
+        return;
+    }
+    if(amt > currentUser.balance) {
+        showToast("❌ Itna balance nahi!");
+        return;
+    }
+
+    let req = {
+        id: "WID" + Date.now(),
+        user_id: currentUser.id,
+        user_name: currentUser.name,
+        user_mobile: currentUser.mobile,
+        withdraw_name: name,
+        withdraw_mobile: mobile,
+        withdraw_account: account,
+        amount: amt,
+        method: selectedMethod,
+        status: "pending",
+        date: new Date().toLocaleString()
+    };
+
+    await db.collection("withdraw_requests").doc(req.id).set(req);
+
+    updateUI();
+    showToast("✅ Withdraw request bhej di!");
+}
+
+// ========== SHARE FUNCTIONS ==========
+function copyLink() {
+    let refLink = document.getElementById("refLink");
+    if(!refLink) return;
+    let link = refLink.innerText;
+    if(navigator.clipboard) {
+        navigator.clipboard.writeText(link).then(function() {
+            showToast("✅ Link copied!");
+        }).catch(function() {
+            fallbackCopy(link);
+        });
+    } else {
+        fallbackCopy(link);
+    }
+}
+
+function fallbackCopy(text) {
+    let textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+        document.execCommand("copy");
+        showToast("✅ Link copied!");
+    } catch(err) {
+        showToast("❌ Copy failed!");
+    }
+    document.body.removeChild(textArea);
+}
+
+function shareWhatsApp() {
+    let refLink = document.getElementById("refLink");
+    if(!refLink) return;
+    let link = encodeURIComponent(refLink.innerText);
+    let text = encodeURIComponent("🇵🇰 Pakistan Earn - Join karo! ");
+    window.open("https://wa.me/?text=" + text + link, "_blank");
+}
+
+function shareTelegram() {
+    let refLink = document.getElementById("refLink");
+    if(!refLink) return;
+    let link = encodeURIComponent(refLink.innerText);
+    let text = encodeURIComponent("Pakistan Earn - Join karo!");
+    window.open("https://t.me/share/url?url=" + link + "&text=" + text, "_blank");
+}
+
+function shareSMS() {
+    let refLink = document.getElementById("refLink");
+    if(!refLink) return;
+    let link = refLink.innerText;
+    let text = "Pakistan Earn - Join karo! " + link;
+    window.open("sms:?body=" + encodeURIComponent(text), "_blank");
+}
+
+function selectPayment(el) {
+    document.querySelectorAll(".payment-option").forEach(function(p) {
+        p.classList.remove("selected");
+    });
+    el.classList.add("selected");
+}
+
+// ========== LOGOUT ==========
+function logout() {
+    if(confirm("Logout?")) {
+        currentUser = null;
+        localStorage.removeItem("pe_currentUser");
+        showScreen("loginScreen");
+        document.getElementById("bottomNav").style.display = "none";
+        showToast("👋 Bye!");
+    }
+}
+
+// ========== TOAST ==========
+function showToast(m) {
+    let t = document.getElementById("toast");
+    if(!t) return;
+    t.innerText = m;
+    t.style.display = "block";
+    setTimeout(function() {
+        t.style.display = "none";
+    }, 3000);
+}
+
+// ========== START ==========
+init();
+</script>
+</body>
+</html>
